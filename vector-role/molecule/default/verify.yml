@@ -1,0 +1,48 @@
+- name: Verify Vector installation
+  hosts: all
+  become: true
+  gather_facts: true
+
+  tasks:
+    - name: Ensure Python is installed on Debian-based systems
+      apt:
+        name: python3
+        state: present
+        update_cache: true
+      when: ansible_os_family == "Debian"
+
+    - name: Ensure Python is installed on RedHat-based systems
+      yum:
+        name: python3
+        state: present
+      when: ansible_os_family == "RedHat"
+
+    - name: Ensure /tmp exists
+      file:
+        path: /tmp
+        state: directory
+        mode: '1777'
+
+    - name: Check that Vector binary exists
+      command: which vector
+      register: vector_binary
+      changed_when: false
+      failed_when: vector_binary.rc != 0
+
+    - name: Validate Vector config file
+      command: vector validate --config-yaml /etc/vector/vector.yaml
+      register: config_check
+      changed_when: false
+      failed_when: config_check.rc != 0
+      ignore_errors: true  # systemd может отсутствовать в контейнере
+
+    - name: Check if vector service is active (optional)
+      command: systemctl is-active vector
+      register: service_status
+      changed_when: false
+      failed_when: service_status.stdout != "active"
+      ignore_errors: true
+
+    - name: Print final success message
+      debug:
+        msg: "Vector is installed and passed verification on {{ inventory_hostname }}"

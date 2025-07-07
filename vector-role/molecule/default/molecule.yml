@@ -1,0 +1,26 @@
+---
+driver:
+  name: docker
+
+platforms:
+  - name: "oraclelinux"
+    image: "oraclelinux:8"
+    user: "root"
+    command: "/bin/sh -c 'mkdir -p /tmp && chmod 1777 /tmp && sleep infinity'"
+    privileged: true
+    override_command: false
+
+  - name: "ubuntu"
+    image: "ubuntu:latest"
+    user: "root"
+    command: "/bin/sh -c 'mkdir -p /tmp && chmod 1777 /tmp && sleep infinity'"
+    privileged: true
+    override_command: false
+
+provisioner:
+  name: ansible
+  options:
+    v: -v
+
+verifier:
+  name: ansible
