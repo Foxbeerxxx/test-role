@@ -1,57 +1,86 @@
-# Домашнее задание к занятию "`Название занятия`" - `Фамилия и имя студента`
+# Домашнее задание к занятию "`Тестирование роли`" - `Татаринцев А.А.`
 
 
-### Инструкция по выполнению домашнего задания
 
-   1. Сделайте `fork` данного репозитория к себе в Github и переименуйте его по названию или номеру занятия, например, https://github.com/имя-вашего-репозитория/git-hw или  https://github.com/имя-вашего-репозитория/7-1-ansible-hw).
-   2. Выполните клонирование данного репозитория к себе на ПК с помощью команды `git clone`.
-   3. Выполните домашнее задание и заполните у себя локально этот файл README.md:
-      - впишите вверху название занятия и вашу фамилию и имя
-      - в каждом задании добавьте решение в требуемом виде (текст/код/скриншоты/ссылка)
-      - для корректного добавления скриншотов воспользуйтесь [инструкцией "Как вставить скриншот в шаблон с решением](https://github.com/netology-code/sys-pattern-homework/blob/main/screen-instruction.md)
-      - при оформлении используйте возможности языка разметки md (коротко об этом можно посмотреть в [инструкции  по MarkDown](https://github.com/netology-code/sys-pattern-homework/blob/main/md-instruction.md))
-   4. После завершения работы над домашним заданием сделайте коммит (`git commit -m "comment"`) и отправьте его на Github (`git push origin`);
-   5. Для проверки домашнего задания преподавателем в личном кабинете прикрепите и отправьте ссылку на решение в виде md-файла в вашем Github.
-   6. Любые вопросы по выполнению заданий спрашивайте в чате учебной группы и/или в разделе “Вопросы по заданию” в личном кабинете.
-   
-Желаем успехов в выполнении домашнего задания!
-   
-### Дополнительные материалы, которые могут быть полезны для выполнения задания
-
-1. [Руководство по оформлению Markdown файлов](https://gist.github.com/Jekins/2bf2d0638163f1294637#Code)
-
----
 
 ### Задание 1
 
-`Приведите ответ в свободной форме........`
 
-1. `Заполните здесь этапы выполнения, если требуется ....`
-2. `Заполните здесь этапы выполнения, если требуется ....`
-3. `Заполните здесь этапы выполнения, если требуется ....`
-4. `Заполните здесь этапы выполнения, если требуется ....`
-5. `Заполните здесь этапы выполнения, если требуется ....`
-6. 
+
+1. `Установка molecule и драйверов`
+```
+pip3 install "molecule" "molecule[docker]" "molecule_podman"
+```
+2. `Подгрузка образа`
+```
+docker pull aragast/netology:latest
+Этот образ содержит нужные версии Python, podman, tox и другие инструменты.
+```
+![1](https://github.com/Foxbeerxxx/test-role/blob/main/img/img1.png)
+
+3. `Активируем виртуальное окружение`
+```
+source ~/.venvs/molecule-env/bin/activate
+```
+
+4. `Molecule-сценарий успешно создан с драйвером Docker`
+```
+molecule init scenario default --driver-name docker
 
 ```
-Поле для вставки кода...
-....
-....
-....
-....
+
+
+5. `Меняю файл molecule.yml`
 ```
-
-`При необходимости прикрепитe сюда скриншоты
-![Название скриншота 1](ссылка на скриншот 1)`
-
-
 ---
+driver:
+  name: docker
 
-### Задание 2
+platforms:
+  - name: oraclelinux
+    image: oraclelinux:8
+    command: /sbin/init
+    privileged: true
 
-`Приведите ответ в свободной форме........`
+  - name: ubuntu
+    image: ubuntu:latest
+    command: /sbin/init
+    privileged: true
 
-1. `Заполните здесь этапы выполнения, если требуется ....`
+```
+6. `Создаю verify.yml  (~/ansible_new/test-role/vector-role/molecule/default/verify.yml)  и добавляю наполнение`
+```
+---
+- name: Verify Vector installation
+  hosts: all
+  gather_facts: false
+  tasks:
+
+    - name: Assert that vector binary exists
+      command: which vector
+      register: vector_binary
+      failed_when: vector_binary.rc != 0
+
+    - name: Validate vector config file
+      command: vector validate --config-yaml /etc/vector/vector.yaml
+      register: config_check
+      failed_when: config_check.rc != 0
+      ignore_errors: yes  # systemd может не работать в контейнере
+
+    - name: Check vector service is running (optional)
+      command: systemctl is-active vector
+      register: service_status
+      failed_when: service_status.stdout != "active"
+      ignore_errors: yes
+
+```
+
+7. `Запускаю полный тест `
+```
+molecule test
+```
+
+
 2. `Заполните здесь этапы выполнения, если требуется ....`
 3. `Заполните здесь этапы выполнения, если требуется ....`
 4. `Заполните здесь этапы выполнения, если требуется ....`
